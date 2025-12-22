@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django CRUD API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        
+        p {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+        
+        .btn-api {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-api:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-admin {
+            background: #f093fb;
+            color: white;
+        }
+        
+        .btn-admin:hover {
+            background: #e47feb;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(240, 147, 251, 0.4);
+        }
+        
+        .features {
+            margin-top: 40px;
+            text-align: left;
+        }
+        
+        .feature-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-item h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .feature-item p {
+            margin: 0;
+            font-size: 0.95em;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Django CRUD API</h1>
+        <p>Selamat datang! API sudah berjalan dengan baik.</p>
+        
+        <div class="btn-container">
+            <a href="/api/items/" class="btn btn-api">📡 Lihat API</a>
+            <a href="/admin/" class="btn btn-admin">⚙️ Admin Panel</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature-item">
+                <h3>✅ REST API</h3>
+                <p>Full CRUD operations dengan Django REST Framework</p>
+            </div>
+            <div class="feature-item">
+                <h3>🔐 Admin Panel</h3>
+                <p>Kelola data dengan Django Admin yang powerful</p>
+            </div>
+            <div class="feature-item">
+                <h3>☁️ Cloud Hosting</h3>
+                <p>Deployed di PythonAnywhere dengan Git workflow</p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Dibuat dengan ❤️ menggunakan Django 5.0</p>
+        </div>
+    </div>
+</body>
+</html>
