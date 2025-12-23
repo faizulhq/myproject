@@ -16,5 +16,5 @@ urlpatterns = [
     path('delete/<int:pk>/', views.item_delete, name='item_delete'),
 
     # API URLs
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]

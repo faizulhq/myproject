@@ -59,22 +59,33 @@
             display: inline-block;
         }
         
+        /* Tombol API (Biru) */
         .btn-api {
             background: #667eea;
             color: white;
         }
-        
         .btn-api:hover {
             background: #5568d3;
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
         
+        /* Tombol CRUD Baru (Oranye) */
+        .btn-crud {
+            background: #ff9f43;
+            color: white;
+        }
+        .btn-crud:hover {
+            background: #ff8c1a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 159, 67, 0.4);
+        }
+
+        /* Tombol Admin (Ungu) */
         .btn-admin {
             background: #f093fb;
             color: white;
         }
-        
         .btn-admin:hover {
             background: #e47feb;
             transform: translateY(-2px);
@@ -113,31 +124,33 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Django CRUD API</h1>
-        <p>Selamat datang! API sudah berjalan dengan baik.</p>
+        <h1>🚀 Django CRUD App</h1>
+        <p>Selamat datang! Sistem sudah siap digunakan.</p>
         
         <div class="btn-container">
+            <a href="{% url 'item_list' %}" class="btn btn-crud">📝 Kelola Item</a>
+            
             <a href="/api/items/" class="btn btn-api">📡 Lihat API</a>
             <a href="/admin/" class="btn btn-admin">⚙️ Admin Panel</a>
         </div>
         
         <div class="features">
             <div class="feature-item">
+                <h3>📝 CRUD System</h3>
+                <p>Tambah, Edit, dan Hapus data dengan mudah via Web UI</p>
+            </div>
+            <div class="feature-item">
                 <h3>✅ REST API</h3>
-                <p>Full CRUD operations dengan Django REST Framework</p>
+                <p>Tersedia juga endpoint API untuk integrasi mobile/frontend</p>
             </div>
             <div class="feature-item">
                 <h3>🔐 Admin Panel</h3>
-                <p>Kelola data dengan Django Admin yang powerful</p>
-            </div>
-            <div class="feature-item">
-                <h3>☁️ Cloud Hosting</h3>
-                <p>Deployed di PythonAnywhere dengan Git workflow</p>
+                <p>Kontrol penuh sistem via Django Admin</p>
             </div>
         </div>
         
         <div class="footer">
-            <p>Dibuat dengan ❤️ menggunakan Django 5.0</p>
+            <p>Dibuat dengan ❤️ menggunakan Django 6.0</p>
         </div>
     </div>
 </body>
