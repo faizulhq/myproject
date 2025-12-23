@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; max-width: 500px; margin: 0 auto; background-color: #f4f4f9; }
+        .form-container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn-save { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+        .btn-save:hover { background-color: #0056b3; }
+        .back-link { display: block; text-align: center; margin-top: 15px; color: #666; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2 style="margin-top: 0; text-align: center;">{{ title }}</h2>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label>Nama Item</label>
+                {{ form.name }}
+            </div>
+            
+            <div class="form-group">
+                <label>Deskripsi</label>
+                {{ form.description }}
+            </div>
+
+            <button type="submit" class="btn-save">Simpan</button>
+        </form>
+        <a href="{% url 'item_list' %}" class="back-link">Batal</a>
+    </div>
+</body>
+</html>
