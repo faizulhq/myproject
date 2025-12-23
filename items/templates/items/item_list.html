@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Item</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background-color: #f4f4f9; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn { padding: 10px 15px; text-decoration: none; border-radius: 5px; color: white; font-size: 14px; }
+        .btn-add { background-color: #28a745; }
+        .btn-edit { background-color: #ffc107; color: black; margin-right: 5px; }
+        .btn-delete { background-color: #dc3545; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .item-info h3 { margin: 0 0 5px 0; color: #333; }
+        .item-info p { margin: 0; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 Daftar Item</h1>
+        <a href="{% url 'item_create' %}" class="btn btn-add">+ Tambah Item</a>
+    </div>
+
+    {% for item in items %}
+    <div class="card">
+        <div class="item-info">
+            <h3>{{ item.name }}</h3>
+            <p>{{ item.description }}</p>
+            <small style="color: #999;">Dibuat: {{ item.created_at|date:"d M Y" }}</small>
+        </div>
+        <div>
+            <a href="{% url 'item_update' item.id %}" class="btn btn-edit">Edit</a>
+            <a href="{% url 'item_delete' item.id %}" class="btn btn-delete">Hapus</a>
+        </div>
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #666;">Belum ada item. Silakan tambah baru.</p>
+    {% endfor %}
+    
+    <div style="margin-top: 20px; text-align: center;">
+        <a href="{% url 'index' %}" style="color: #666;">Kembali ke Beranda</a>
+    </div>
+</body>
+</html>
