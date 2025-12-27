@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Item
 from .serializers import ItemSerializer
 from django.shortcuts import render, redirect, get_object_or_404
@@ -46,7 +47,11 @@ def item_delete(request, pk):
         return redirect('item_list')
     return render(request, 'items/item_confirm_delete.html', {'item': item})
 
-# --- API ViewSets (Yang lama) ---
+# --- API ViewSets ---
 class ItemViewSet(viewsets.ModelViewSet):
     queryset = Item.objects.all()
     serializer_class = ItemSerializer
+    parser_classes = (MultiPartParser, FormParser)  
+    
+    def get_serializer_context(self):
+        return {'request': self.request}

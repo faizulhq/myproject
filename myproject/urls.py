@@ -17,9 +17,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from items.views import index
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', index, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include('items.urls')),
 ]
+    
+# Serve media files di development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
