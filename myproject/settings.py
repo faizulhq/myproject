@@ -24,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xk1@jaq^6dya$cg9b^$$(hj4xq-qq_nsk@l2^auig$w8^xc!xj'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*', 'myproject-production-ee63.up.railway.app']
+ALLOWED_HOSTS = ['*', 'myproject-production-ee63.up.railway.app', '.vercel.app']
 CSRF_TRUSTED_ORIGINS = ["https://myproject-production-ee63.up.railway.app", "http://127.0.0.1:8000"]
 
 
@@ -149,4 +149,15 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True 
+CORS_ALLOW_ALL_ORIGINS = False
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000", 
+    "https://fe-myproject.vercel.app"
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://myproject-production-ee63.up.railway.app",
+    "http://localhost:3000",
+    "https://fe-myproject.vercel.app"
+]
