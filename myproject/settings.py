@@ -233,10 +233,14 @@ REST_FRAMEWORK = {
 # ==============================================================================
 
 if not DEBUG:
-    # HTTPS Settings
-    SECURE_SSL_REDIRECT = True
+    # HTTPS Settings - Disable SECURE_SSL_REDIRECT for Railway
+    # Railway handles SSL termination, so redirects cause loops
+    SECURE_SSL_REDIRECT = False  # Changed from True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    
+    # Proxy Headers (Important for Railway)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     
     # HSTS Settings
     SECURE_HSTS_SECONDS = 31536000  # 1 year
