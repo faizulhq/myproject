@@ -43,9 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',  # Must be before django.contrib.staticfiles
     'django.contrib.staticfiles',
-    'cloudinary',
+    'cloudinary',  # Hanya cloudinary, tanpa cloudinary_storage
     
     # Third party apps
     'rest_framework',
@@ -158,7 +157,7 @@ STATICFILES_DIRS = [
 # Storage configuration using Django 4.2+ STORAGES setting
 STORAGES = {
     "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         # Using CompressedStaticFilesStorage instead of CompressedManifestStaticFilesStorage
@@ -167,19 +166,27 @@ STORAGES = {
     },
 }
 
+# Backward compatibility for django-cloudinary-storage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
 
 # ==============================================================================
 # MEDIA FILES (Cloudinary)
 # ==============================================================================
 
 MEDIA_URL = '/media/'
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
+# Cloudinary Configuration
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key = os.getenv('CLOUDINARY_API_KEY'),
+    api_secret = os.getenv('CLOUDINARY_API_SECRET'),
+    secure = True
+)
 
 
 # ==============================================================================
@@ -191,6 +198,7 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://fe-myproject.vercel.app",
+    # Tambahkan URL Vercel baru setelah deploy (format: https://fe-myproject-xxxxx.vercel.app)
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -199,6 +207,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://myproject-production-ee63.up.railway.app",
     "http://localhost:3000",
     "https://fe-myproject.vercel.app",
+    # Tambahkan URL Vercel baru setelah deploy
 ]
 
 

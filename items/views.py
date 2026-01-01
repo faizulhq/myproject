@@ -19,7 +19,7 @@ def item_list(request):
 # 2. CREATE
 def item_create(request):
     if request.method == 'POST':
-        form = ItemForm(request.POST)
+        form = ItemForm(request.POST, request.FILES)  # Tambahkan request.FILES
         if form.is_valid():
             form.save()
             return redirect('item_list')
@@ -31,7 +31,7 @@ def item_create(request):
 def item_update(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if request.method == 'POST':
-        form = ItemForm(request.POST, instance=item)
+        form = ItemForm(request.POST, request.FILES, instance=item)  # Tambahkan request.FILES
         if form.is_valid():
             form.save()
             return redirect('item_list')
