@@ -2,10 +2,6 @@ from rest_framework import serializers
 from .models import Item
 
 class ItemSerializer(serializers.ModelSerializer):
-    # Force absolute URL untuk image dan document
-    image = serializers.SerializerMethodField()
-    document = serializers.SerializerMethodField()
-    
     class Meta:
         model = Item
         fields = [
@@ -17,14 +13,17 @@ class ItemSerializer(serializers.ModelSerializer):
             'created_at', 
             'updated_at'
         ]
+        # Set required False agar tidak error saat update tanpa ganti gambar
+        extra_kwargs = {
+            'image': {'required': False},
+            'document': {'required': False}
+        }
     
-    def get_image(self, obj):
-        if obj.image:
-            # CloudinaryField.url sudah return full URL
-            return str(obj.image.url) if hasattr(obj.image, 'url') else str(obj.image)
-        return None
-    
-    def get_document(self, obj):
-        if obj.document:
-            return str(obj.document.url) if hasattr(obj.document, 'url') else str(obj.document)
-        return None
+    # Gunakan ini untuk memastikan outputnya tetap Full URL
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.image:
+            representation['image'] = instance.image.url
+        if instance.document:
+            representation['document'] = instance.document.url
+        return representation
