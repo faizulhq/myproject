@@ -52,7 +52,10 @@ INSTALLED_APPS = [
     
     # Local apps
     'items',
+    'users',
 ]
+
+AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
