@@ -1,7 +1,7 @@
 """
 Django settings for myproject project.
 Production Ready Configuration for Railway & Vercel.
-Fix: Whitenoise MissingFileError resolved.
+Fix: Disable Whitenoise compression to prevent FileNotFoundError during build.
 """
 
 from pathlib import Path
@@ -19,7 +19,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ==============================================================================
 
-# SECRET_KEY wajib ada di Environment Variable Railway
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
 # DEBUG: Default False di production agar aman
@@ -28,7 +27,7 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 # ALLOWED_HOSTS handling
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
 if '*' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('*') # Fallback aman untuk container
+    ALLOWED_HOSTS.append('*') 
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -59,8 +58,8 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Static files
-    'corsheaders.middleware.CorsMiddleware',      # CORS
+    'whitenoise.middleware.WhiteNoiseMiddleware', # Middleware tetap aktif untuk serve file
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -91,7 +90,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # ==============================================================================
-# DATABASE (Otomatis detect Local vs Railway)
+# DATABASE
 # ==============================================================================
 
 DATABASES = {
@@ -123,7 +122,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================================================
-# STATIC & MEDIA FILES (Fixed for Whitenoise Error)
+# STATIC & MEDIA FILES (SAFE MODE)
 # ==============================================================================
 
 STATIC_URL = '/static/'
@@ -143,14 +142,14 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        # PERBAIKAN DI SINI:
-        # Gunakan CompressedStaticFilesStorage (bukan Manifest) agar tidak error jika file hilang
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        # PERBAIKAN FINAL: Gunakan penyimpanan standar Django.
+        # Ini mencegah Whitenoise mencoba mengompres file saat build (penyebab error).
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Variable legacy untuk kompatibilitas django-cloudinary-storage
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+# Legacy setting untuk kompatibilitas library lain
+STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # ==============================================================================
 # CORS & CSRF SETTINGS
@@ -159,7 +158,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
-# Definisikan URL Frontend di sini
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -215,7 +213,7 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==============================================================================
-# SECURITY SETTINGS (Production - Railway Specific)
+# SECURITY SETTINGS (Railway Specific)
 # ==============================================================================
 
 if not DEBUG:
