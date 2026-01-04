@@ -1,10 +1,12 @@
-from rest_framework import viewsets, permissions, filters, pagination
+from rest_framework import viewsets, permissions, filters, pagination, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from django.shortcuts import render
 from .models import Item
 from .serializers import ItemSerializer
 from .permissions import IsOwnerOrAdminOrPublicReadOnly
+import traceback # PENTING: Untuk melihat error asli di log
 
 class StandardResultsSetPagination(pagination.PageNumberPagination):
     page_size = 8
@@ -13,69 +15,66 @@ class StandardResultsSetPagination(pagination.PageNumberPagination):
 
 class ItemViewSet(viewsets.ModelViewSet):
     serializer_class = ItemSerializer
+    # Parser untuk menangani form-data (Upload Gambar/File)
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrPublicReadOnly]
     pagination_class = StandardResultsSetPagination
     
-    # Fitur Search & Sorting
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'description'] 
     ordering_fields = ['created_at', 'name']
-    ordering = ['-created_at'] # Default urutan: Terbaru
-
-    def get_permissions(self):
-        """
-        Mengatur permission secara dinamis agar halaman depan tidak Error 401.
-        """
-        if self.action in ['list', 'retrieve']:
-            # Melihat daftar item & detail item BOLEH PUBLIK (Tanpa Login)
-            return [AllowAny()]
-        
-        # Membuat, Mengedit, Menghapus WAJIB LOGIN
-        # Ditambah permission custom untuk memastikan hanya pemilik yang bisa edit
-        return [IsAuthenticated(), IsOwnerOrAdminOrPublicReadOnly()]
+    ordering = ['-created_at']
 
     def get_queryset(self):
-        """
-        Mengatur data yang ditampilkan berdasarkan user & scope.
-        """
         user = self.request.user
         queryset = Item.objects.all()
-
-        # Ambil parameter scope dari URL
         scope = self.request.query_params.get('scope')
 
-        # 1. Logic Tab 'Milik Saya' (?scope=my)
         if scope == 'my':
-            # Jika user belum login (Anonymous) tapi paksa akses ?scope=my,
-            # kembalikan list kosong agar tidak error.
             if user.is_anonymous:
                 return queryset.none()
-            # Tampilkan semua item (Public + Draft) milik user tersebut
             return queryset.filter(owner=user)
 
-        # 2. Logic Default / Tab 'Publik'
-        # HANYA tampilkan item dengan status 'public'.
-        # Berlaku untuk semua user (termasuk admin) agar tampilan konsisten.
         return queryset.filter(status='public')
 
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated(), IsOwnerOrAdminOrPublicReadOnly()]
+
+    # === MODIFIKASI DEBUG: Menangkap Error 500 ===
+    def create(self, request, *args, **kwargs):
+        """
+        Override create untuk menangkap error sistem dan menampilkannya
+        """
+        try:
+            print("📦 [DEBUG] Mencoba create item...")
+            print(f"📦 [DEBUG] User: {request.user}")
+            print(f"📦 [DEBUG] Data: {request.data}")
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print("\n❌ [ERROR FATAL] Gagal Create Item:")
+            print(f"❌ Type: {type(e)}")
+            print(f"❌ Message: {str(e)}")
+            traceback.print_exc() # Print error lengkap ke log Railway
+            
+            # Kembalikan pesan error ke Frontend (JSON) agar tidak cuma 'Server Error'
+            return Response(
+                {
+                    "detail": "Gagal menyimpan item.",
+                    "error_type": str(type(e).__name__),
+                    "error_message": str(e)
+                }, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     def perform_create(self, serializer):
-        # Otomatis set owner ke user yang sedang login saat create
+        # Set owner ke user yang sedang login
         serializer.save(owner=self.request.user)
 
-# --- Legacy Views (Django Template Biasa) ---
-# Kode ini dibiarkan untuk menjaga kompatibilitas URL lama (jika ada)
-
-def index(request):
-    return render(request, 'items/index.html')
-
-def item_list(request):
-    return render(request, 'items/item_list.html')
-
-def item_create(request):
-    return render(request, 'items/item_form.html')
-
-def item_update(request, pk):
-    return render(request, 'items/item_form.html')
-
-def item_delete(request, pk):
-    return render(request, 'items/item_confirm_delete.html')
+# --- Legacy Views ---
+def index(request): return render(request, 'items/index.html')
+def item_list(request): return render(request, 'items/item_list.html')
+def item_create(request): return render(request, 'items/item_form.html')
+def item_update(request, pk): return render(request, 'items/item_form.html')
+def item_delete(request, pk): return render(request, 'items/item_confirm_delete.html')
