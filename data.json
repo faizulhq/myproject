@@ -1,0 +1,188 @@
+[
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-01-04T13:59:26.162Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "1",
+    "object_repr": "admin",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Role\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-01-04T14:17:09.865Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "1",
+    "object_repr": "admin",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"name\": \"profile\", \"object\": \"Profile of admin\", \"fields\": [\"Avatar\", \"Website\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-01-04T14:18:06.580Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "2",
+    "object_repr": "faiz",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2026-01-04T14:18:22.863Z",
+    "user": 1,
+    "content_type": 7,
+    "object_id": "2",
+    "object_repr": "Profile of faiz",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Avatar\", \"Website\"]}}]"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ct97qbq8qbha7c8dpbcsd2jy4cyb1xqu",
+  "fields": {
+    "session_data": ".eJxVjDsOwjAQBe_iGlm7TvyjpOcM1npt4wBypDipEHeHSCmgfTPzXiLQttaw9byEKYmzQHH63SLxI7cdpDu12yx5busyRbkr8qBdXueUn5fD_Tuo1Ou3zh4pKUQ_aMfgQHnHRFnZaNka8rqABUAT2UNxOSVAdKhJlXEoMBrx_gDOJTc0:1vcOda:niAypoa_USlVMk6AIzTXWRkoUdjhedRqzO5OWFph2fc",
+    "expire_date": "2026-01-18T13:59:18.389Z"
+  }
+},
+{
+  "model": "items.item",
+  "pk": 1,
+  "fields": {
+    "name": "tes",
+    "description": "z",
+    "image": "items/images/logo_ps21_page-0001.JPG",
+    "document": "items/documents/Dokumen_10.docx",
+    "status": "draft",
+    "owner": 1,
+    "created_at": "2026-01-04T14:40:58.075Z",
+    "updated_at": "2026-01-04T14:40:58.076Z"
+  }
+},
+{
+  "model": "items.item",
+  "pk": 2,
+  "fields": {
+    "name": "tes 2",
+    "description": "v",
+    "image": "items/images/logo_ps21_page-000111.JPG",
+    "document": "items/documents/Dokumen_1.docx",
+    "status": "public",
+    "owner": 1,
+    "created_at": "2026-01-04T14:41:27.145Z",
+    "updated_at": "2026-01-04T14:41:27.145Z"
+  }
+},
+{
+  "model": "items.item",
+  "pk": 3,
+  "fields": {
+    "name": "tes 3",
+    "description": "z",
+    "image": "items/images/web2.jpg",
+    "document": "items/documents/Langkah_CRUD_Investor.docx",
+    "status": "public",
+    "owner": 2,
+    "created_at": "2026-01-04T14:42:12.187Z",
+    "updated_at": "2026-01-04T14:42:12.187Z"
+  }
+},
+{
+  "model": "users.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$Z7xtUbNkRKlXxN3xLjk76a$HDI5j+Xxd6Zwgl3QgzQw2x9g7rC+GdTSkou2nunUO+c=",
+    "last_login": "2026-01-04T13:59:18Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin1@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-01-04T13:59:05Z",
+    "role": "admin",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$LZLGaPjKwfchLlB2yIDNAH$alx2DzkWEQy1VNHVUC+d0ijUl0KyVts2RUVLWFefQ0U=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "faiz",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-01-04T14:18:06.135Z",
+    "role": "user",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.user",
+  "pk": 3,
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$iyLGIsg0nvZD5z2zdgXT0f$BnitqGy2i02zrp3efsVm9QuTtog/GM2+yDUzZHHVU7o=",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "nano",
+    "first_name": "",
+    "last_name": "",
+    "email": "nano10@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-01-04T14:22:11.846Z",
+    "role": "user",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "users.profile",
+  "pk": 1,
+  "fields": {
+    "user": 1,
+    "avatar": "avatars/images.jpg",
+    "website": "http://localhost:3000/"
+  }
+},
+{
+  "model": "users.profile",
+  "pk": 2,
+  "fields": {
+    "user": 2,
+    "avatar": "avatars/images.jpg",
+    "website": "http://127.0.0.1:8000/admin/users/profile/2/change/"
+  }
+},
+{
+  "model": "users.profile",
+  "pk": 3,
+  "fields": {
+    "user": 3,
+    "avatar": "avatars/download.jpg",
+    "website": "https://vercel.com/faizulhaqs-projects"
+  }
+}
+]
