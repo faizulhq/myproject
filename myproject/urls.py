@@ -16,17 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from items.views import index
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', index, name='home'),
     path('admin/', admin.site.urls),
-    path('api/', include('items.urls')),
+    # Prefix /api/auth/ akan mengarah ke users app
     path('api/auth/', include('users.urls')),
+    path('api/items/', include('items.urls')), # Asumsi items app ada di sini
 ]
-    
-# Serve media files di development
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
