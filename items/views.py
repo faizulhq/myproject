@@ -1,57 +1,64 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, permissions, filters, pagination
 from rest_framework.parsers import MultiPartParser, FormParser
+from django.shortcuts import render
 from .models import Item
 from .serializers import ItemSerializer
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import ItemForm
+from .permissions import IsOwnerOrAdminOrPublicReadOnly
 
-# --- Halaman Utama ---
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 8
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+class ItemViewSet(viewsets.ModelViewSet):
+    serializer_class = ItemSerializer
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdminOrPublicReadOnly]
+    pagination_class = StandardResultsSetPagination
+    
+    # Fitur Search & Sorting
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description'] 
+    ordering_fields = ['created_at', 'name']
+    ordering = ['-created_at'] # Default urutan: Terbaru
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Item.objects.all()
+
+        # Ambil parameter scope dari URL (frontend mengirim ?scope=my atau ?scope=public)
+        scope = self.request.query_params.get('scope')
+
+        # LOGIKA PERBAIKAN:
+        # Aturan ini berlaku mutlak untuk Admin maupun User biasa.
+        
+        if scope == 'my':
+            # Tab 'Milik Saya': Tampilkan SEMUA item milik user yang login (Draft + Public)
+            return queryset.filter(owner=user)
+
+        # Tab 'Publik' (atau default jika tidak ada scope):
+        # HANYA tampilkan item dengan status 'public'.
+        # Admin tidak boleh melihat 'draft' orang lain di tab ini agar UI tetap rapi.
+        return queryset.filter(status='public')
+
+    def perform_create(self, serializer):
+        # Otomatis set owner ke user yang sedang login
+        serializer.save(owner=self.request.user)
+
+# --- Legacy Views (Django Template Biasa) ---
+# Kode ini tetap dibiarkan agar tidak error jika ada sisa import URL lama
+
 def index(request):
     return render(request, 'items/index.html')
 
-# --- CRUD Views (Django Template Biasa) ---
-
-# 1. READ (List View)
 def item_list(request):
-    items = Item.objects.all()
-    return render(request, 'items/item_list.html', {'items': items})
+    return render(request, 'items/item_list.html')
 
-# 2. CREATE
 def item_create(request):
-    if request.method == 'POST':
-        form = ItemForm(request.POST, request.FILES)  # Tambahkan request.FILES
-        if form.is_valid():
-            form.save()
-            return redirect('item_list')
-    else:
-        form = ItemForm()
-    return render(request, 'items/item_form.html', {'form': form, 'title': 'Tambah Item Baru'})
+    return render(request, 'items/item_form.html')
 
-# 3. UPDATE
 def item_update(request, pk):
-    item = get_object_or_404(Item, pk=pk)
-    if request.method == 'POST':
-        form = ItemForm(request.POST, request.FILES, instance=item)  # Tambahkan request.FILES
-        if form.is_valid():
-            form.save()
-            return redirect('item_list')
-    else:
-        form = ItemForm(instance=item)
-    return render(request, 'items/item_form.html', {'form': form, 'title': 'Edit Item'})
+    return render(request, 'items/item_form.html')
 
-# 4. DELETE
 def item_delete(request, pk):
-    item = get_object_or_404(Item, pk=pk)
-    if request.method == 'POST':
-        item.delete()
-        return redirect('item_list')
-    return render(request, 'items/item_confirm_delete.html', {'item': item})
-
-# --- API ViewSets ---
-class ItemViewSet(viewsets.ModelViewSet):
-    queryset = Item.objects.all()
-    serializer_class = ItemSerializer
-    parser_classes = (MultiPartParser, FormParser)  
-    
-    def get_serializer_context(self):
-        return {'request': self.request}
+    return render(request, 'items/item_confirm_delete.html')

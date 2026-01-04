@@ -2,42 +2,17 @@ from rest_framework import serializers
 from .models import Item
 
 class ItemSerializer(serializers.ModelSerializer):
+    # Menampilkan username pemilik item (Read Only)
+    owner_username = serializers.ReadOnlyField(source='owner.username')
+    is_my_item = serializers.SerializerMethodField()
+
     class Meta:
         model = Item
-        fields = [
-            'id', 
-            'name', 
-            'description', 
-            'image',      
-            'document',   
-            'created_at', 
-            'updated_at'
-        ]
-        # Set required False agar tidak error jika field kosong
-        extra_kwargs = {
-            'image': {'required': False},
-            'document': {'required': False}
-        }
-    
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        
-        # --- PERBAIKAN: Gunakan try-except untuk mencegah Error 500 ---
-        
-        # Handle Image
-        if instance.image:
-            try:
-                # Coba ambil URL asli dari Cloudinary
-                representation['image'] = instance.image.url
-            except AttributeError:
-                # Jika error (misal masih berupa string path), kembalikan string-nya saja
-                representation['image'] = str(instance.image)
+        fields = ['id', 'name', 'description', 'image', 'document', 'status', 'owner', 'owner_username', 'is_my_item', 'created_at']
+        read_only_fields = ['owner', 'created_at'] # Owner otomatis diisi backend
 
-        # Handle Document
-        if instance.document:
-            try:
-                representation['document'] = instance.document.url
-            except AttributeError:
-                representation['document'] = str(instance.document)
-                
-        return representation
+    def get_is_my_item(self, obj):
+        request = self.context.get('request')
+        if request and request.user:
+            return obj.owner == request.user
+        return False
