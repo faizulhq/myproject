@@ -81,7 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media', # Akses MEDIA_URL di template
+                'django.template.context_processors.media', 
             ],
         },
     },
@@ -93,8 +93,6 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 # DATABASE (Otomatis detect Local vs Railway)
 # ==============================================================================
 
-# dj_database_url akan otomatis mencari env variable 'DATABASE_URL' di Railway.
-# Jika tidak ada, dia akan fallback ke sqlite lokal.
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
@@ -124,7 +122,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================================================
-# STATIC & MEDIA FILES (Django 6.0 Style)
+# STATIC & MEDIA FILES (Django 6.0 Style + Fix)
 # ==============================================================================
 
 STATIC_URL = '/static/'
@@ -141,14 +139,16 @@ CLOUDINARY_STORAGE = {
 # Konfigurasi Penyimpanan (STORAGES) untuk Django 4.2+ / 6.0
 STORAGES = {
     "default": {
-        # Media (Gambar Upload User) masuk ke Cloudinary
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        # Static (CSS/JS) dikelola Whitenoise
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# !!! PENTING: Fix untuk error AttributeError: 'Settings' object has no attribute 'STATICFILES_STORAGE'
+# Library django-cloudinary-storage masih mengecek variable lama ini.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ==============================================================================
 # CORS & CSRF SETTINGS
@@ -157,15 +157,13 @@ STORAGES = {
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOW_CREDENTIALS = True
 
-# Definisikan URL Frontend di sini (Local + Production Vercel)
+# Definisikan URL Frontend di sini
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    # Ganti URL di bawah ini dengan URL Vercel kamu yang sebenarnya
     "https://fe-myproject.vercel.app", 
 ]
 
-# Jika ada variable FRONTEND_URL di environment, tambahkan juga
 if os.getenv('FRONTEND_URL'):
     CORS_ALLOWED_ORIGINS.append(os.getenv('FRONTEND_URL'))
 
@@ -217,24 +215,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ==============================================================================
 # SECURITY SETTINGS (Production - Railway Specific)
 # ==============================================================================
-# Bagian ini diambil dari commit lamamu yang sudah terbukti works di Railway
 
 if not DEBUG:
-    # HTTPS Settings - Disable SECURE_SSL_REDIRECT for Railway
-    # Railway handles SSL termination, so redirects cause loops
     SECURE_SSL_REDIRECT = False 
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
-    # Proxy Headers (Important for Railway to know it is https)
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    
-    # HSTS Settings
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000 
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
-    # Additional Security Headers
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
