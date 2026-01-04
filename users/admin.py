@@ -2,30 +2,36 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import User, Profile
 
-# Agar bisa edit Profile (Avatar/Website) di dalam halaman User
+# Inline untuk edit Profile langsung di halaman User
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
     verbose_name_plural = 'Profile'
+    fields = ('avatar', 'website')  # Hanya tampilkan field yang relevan
 
 class CustomUserAdmin(UserAdmin):
-    # Tambahkan Inline
+    # Tambahkan ProfileInline
     inlines = (ProfileInline,)
 
-    # FIELDSETS: Tampilkan 'role' saja, JANGAN 'avatar' (karena ada di inline)
+    # FIELDSETS: Tampilkan 'role' di form edit user
     fieldsets = UserAdmin.fieldsets + (
-        ('Custom Info', {'fields': ('role',)}), 
+        ('Informasi Tambahan', {
+            'fields': ('role',)
+        }),
     )
     
-    # ADD_FIELDSETS: Saat buat user baru
+    # ADD_FIELDSETS: Saat buat user baru via admin
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Custom Info', {'fields': ('role',)}),
+        ('Informasi Tambahan', {
+            'fields': ('role',)
+        }),
     )
     
-    # LIST DISPLAY: Kembalikan 'role'
-    list_display = ['username', 'email', 'role', 'is_staff']
-    list_filter = ['role', 'is_staff', 'is_superuser']
+    # LIST DISPLAY: Tampilkan role di daftar user
+    list_display = ['username', 'email', 'role', 'is_staff', 'is_active']
+    list_filter = ['role', 'is_staff', 'is_superuser', 'is_active']
+    search_fields = ['username', 'email', 'first_name', 'last_name']
 
+# Register Model
 admin.site.register(User, CustomUserAdmin)
-# Opsional: Register Profile terpisah juga
-admin.site.register(Profile)
+admin.site.register(Profile)  # Opsional: register Profile terpisah juga

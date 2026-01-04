@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
@@ -24,14 +25,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True  # DEVELOPMENT: Selalu True
 
-# FIXED: Better ALLOWED_HOSTS handling
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
-ALLOWED_HOSTS += [
-    '.railway.app',
-    'myproject-production-ee63.up.railway.app',
-]
+# DEVELOPMENT: Allow localhost
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -44,11 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',
     
     # Third party apps
     'rest_framework',
-    'corsheaders',  # IMPORTANT: CORS harus ada
+    'corsheaders',
     
     # Local apps
     'items',
@@ -82,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',  # TAMBAHKAN INI
             ],
         },
     },
@@ -90,27 +87,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # ==============================================================================
-# DATABASE
+# DATABASE - DEVELOPMENT (SQLite)
 # ==============================================================================
 
-if os.getenv('DB_LIVE') == 'True':
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('PGDATABASE'),
-            'USER': os.getenv('PGUSER'),
-            'PASSWORD': os.getenv('PGPASSWORD'),
-            'HOST': os.getenv('PGHOST'),
-            'PORT': os.getenv('PGPORT', '5432'),
-        }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+}
 
 # ==============================================================================
 # PASSWORD VALIDATION
@@ -139,55 +124,31 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = []
-
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-    },
-}
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # ==============================================================================
-# MEDIA FILES (Cloudinary)
+# MEDIA FILES - DEVELOPMENT (LOKAL)
 # ==============================================================================
 
 MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-
-cloudinary.config(
-    cloud_name = os.getenv('CLOUDINARY_CLOUD_NAME'),
-    api_key = os.getenv('CLOUDINARY_API_KEY'),
-    api_secret = os.getenv('CLOUDINARY_API_SECRET'),
-    secure = True
-)
+# DEVELOPMENT: Gunakan FileSystemStorage (simpan file lokal)
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # ==============================================================================
-# CORS & CSRF SETTINGS - FIXED VERSION
+# CORS & CSRF SETTINGS - DEVELOPMENT
 # ==============================================================================
 
 CORS_ALLOW_ALL_ORIGINS = False
 
-# Parse CORS origins dari environment variable
-cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
-
-# Fallback jika tidak ada env variable
-if not CORS_ALLOWED_ORIGINS:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "https://fe-myproject.vercel.app",
-    ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# FIXED: Tambahkan method dan headers yang lengkap
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -209,17 +170,10 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Parse CSRF trusted origins
-csrf_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',') if origin.strip()]
-
-# Fallback
-if not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS = [
-        "https://myproject-production-ee63.up.railway.app",
-        "http://localhost:3000",
-        "https://fe-myproject.vercel.app",
-    ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # ==============================================================================
 # REST FRAMEWORK
@@ -241,27 +195,16 @@ REST_FRAMEWORK = {
 }
 
 # ==============================================================================
-# SECURITY SETTINGS (Production)
+# JWT SETTINGS
 # ==============================================================================
 
-if not DEBUG:
-    # HTTPS Settings - Railway handles SSL termination
-    SECURE_SSL_REDIRECT = False  # Railway handles this
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    
-    # Proxy Headers (Important for Railway)
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    
-    # HSTS Settings
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    
-    # Additional Security Headers
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 # ==============================================================================
 # DEFAULT PRIMARY KEY FIELD TYPE
@@ -270,19 +213,43 @@ if not DEBUG:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==============================================================================
-# LOGGING (Optional - untuk debugging)
+# LOGGING (Development - Verbose)
 # ==============================================================================
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
     },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }
+
+print("=" * 80)
+print("🚀 DJANGO DEVELOPMENT MODE")
+print("=" * 80)
+print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"📁 MEDIA_ROOT: {MEDIA_ROOT}")
+print(f"🌐 MEDIA_URL: {MEDIA_URL}")
+print(f"🔧 DEBUG: {DEBUG}")
+print(f"🔐 JWT Access Token Lifetime: 1 day")
+print("=" * 80)
