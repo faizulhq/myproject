@@ -1,6 +1,7 @@
 """
 Django settings for myproject project.
 Production Ready Configuration for Railway & Vercel.
+Fix: Whitenoise MissingFileError resolved.
 """
 
 from pathlib import Path
@@ -122,7 +123,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================================================
-# STATIC & MEDIA FILES (Django 6.0 Style + Fix)
+# STATIC & MEDIA FILES (Fixed for Whitenoise Error)
 # ==============================================================================
 
 STATIC_URL = '/static/'
@@ -136,19 +137,20 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
 }
 
-# Konfigurasi Penyimpanan (STORAGES) untuk Django 4.2+ / 6.0
+# Konfigurasi Penyimpanan (STORAGES)
 STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        # PERBAIKAN DI SINI:
+        # Gunakan CompressedStaticFilesStorage (bukan Manifest) agar tidak error jika file hilang
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
-# !!! PENTING: Fix untuk error AttributeError: 'Settings' object has no attribute 'STATICFILES_STORAGE'
-# Library django-cloudinary-storage masih mengecek variable lama ini.
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Variable legacy untuk kompatibilitas django-cloudinary-storage
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # ==============================================================================
 # CORS & CSRF SETTINGS
