@@ -16,22 +16,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # ==============================================================================
 # CORE SETTINGS
 # ==============================================================================
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
+# FIXED: Better ALLOWED_HOSTS handling
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(',')
-
+ALLOWED_HOSTS += [
+    '.railway.app',
+    'myproject-production-ee63.up.railway.app',
+]
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -44,11 +44,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'cloudinary',  # Hanya cloudinary, tanpa cloudinary_storage
+    'cloudinary',
     
     # Third party apps
     'rest_framework',
-    'corsheaders',
+    'corsheaders',  # IMPORTANT: CORS harus ada
     
     # Local apps
     'items',
@@ -59,8 +59,8 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Right after SecurityMiddleware
-    'corsheaders.middleware.CorsMiddleware',  # Should be as high as possible
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # PENTING: Harus di atas CommonMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,7 +89,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-
 # ==============================================================================
 # DATABASE
 # ==============================================================================
@@ -98,11 +97,11 @@ if os.getenv('DB_LIVE') == 'True':
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT', '5432'),
+            'NAME': os.getenv('PGDATABASE'),
+            'USER': os.getenv('PGUSER'),
+            'PASSWORD': os.getenv('PGPASSWORD'),
+            'HOST': os.getenv('PGHOST'),
+            'PORT': os.getenv('PGPORT', '5432'),
         }
     }
 else:
@@ -113,65 +112,44 @@ else:
         }
     }
 
-
 # ==============================================================================
 # PASSWORD VALIDATION
 # ==============================================================================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 # ==============================================================================
 # INTERNATIONALIZATION
 # ==============================================================================
 
 LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'Asia/Jakarta'  # Changed to Indonesian timezone
-
+TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
-
 USE_TZ = True
 
-
 # ==============================================================================
-# STATIC FILES (CSS, JavaScript, Images)
+# STATIC FILES
 # ==============================================================================
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [
-    # BASE_DIR / 'static',  # Uncomment if you have a static folder
-]
+STATICFILES_DIRS = []
 
-# Storage configuration using Django 4.2+ STORAGES setting
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        # Using CompressedStaticFilesStorage instead of CompressedManifestStaticFilesStorage
-        # to avoid issues with missing Django admin static files
         "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
-# Backward compatibility for django-cloudinary-storage
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 
 # ==============================================================================
 # MEDIA FILES (Cloudinary)
@@ -179,7 +157,6 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 
-# Cloudinary Configuration
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -191,28 +168,58 @@ cloudinary.config(
     secure = True
 )
 
-
 # ==============================================================================
-# CORS & CSRF SETTINGS
+# CORS & CSRF SETTINGS - FIXED VERSION
 # ==============================================================================
 
 CORS_ALLOW_ALL_ORIGINS = False
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "https://fe-myproject.vercel.app",
-    # Tambahkan URL Vercel baru setelah deploy (format: https://fe-myproject-xxxxx.vercel.app)
-]
+# Parse CORS origins dari environment variable
+cors_origins_env = os.getenv('CORS_ALLOWED_ORIGINS', '')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
+
+# Fallback jika tidak ada env variable
+if not CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "https://fe-myproject.vercel.app",
+    ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://myproject-production-ee63.up.railway.app",
-    "http://localhost:3000",
-    "https://fe-myproject.vercel.app",
-    # Tambahkan URL Vercel baru setelah deploy
+# FIXED: Tambahkan method dan headers yang lengkap
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
 ]
 
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Parse CSRF trusted origins
+csrf_origins_env = os.getenv('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins_env.split(',') if origin.strip()]
+
+# Fallback
+if not CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = [
+        "https://myproject-production-ee63.up.railway.app",
+        "http://localhost:3000",
+        "https://fe-myproject.vercel.app",
+    ]
 
 # ==============================================================================
 # REST FRAMEWORK
@@ -233,15 +240,13 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-
 # ==============================================================================
 # SECURITY SETTINGS (Production)
 # ==============================================================================
 
 if not DEBUG:
-    # HTTPS Settings - Disable SECURE_SSL_REDIRECT for Railway
-    # Railway handles SSL termination, so redirects cause loops
-    SECURE_SSL_REDIRECT = False  # Changed from True
+    # HTTPS Settings - Railway handles SSL termination
+    SECURE_SSL_REDIRECT = False  # Railway handles this
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     
@@ -249,7 +254,7 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     
     # HSTS Settings
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     
@@ -258,9 +263,26 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
 
-
 # ==============================================================================
 # DEFAULT PRIMARY KEY FIELD TYPE
 # ==============================================================================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ==============================================================================
+# LOGGING (Optional - untuk debugging)
+# ==============================================================================
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}

@@ -13,17 +13,31 @@ class ItemSerializer(serializers.ModelSerializer):
             'created_at', 
             'updated_at'
         ]
-        # Set required False agar tidak error saat update tanpa ganti gambar
+        # Set required False agar tidak error jika field kosong
         extra_kwargs = {
             'image': {'required': False},
             'document': {'required': False}
         }
     
-    # Gunakan ini untuk memastikan outputnya tetap Full URL
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        
+        # --- PERBAIKAN: Gunakan try-except untuk mencegah Error 500 ---
+        
+        # Handle Image
         if instance.image:
-            representation['image'] = instance.image.url
+            try:
+                # Coba ambil URL asli dari Cloudinary
+                representation['image'] = instance.image.url
+            except AttributeError:
+                # Jika error (misal masih berupa string path), kembalikan string-nya saja
+                representation['image'] = str(instance.image)
+
+        # Handle Document
         if instance.document:
-            representation['document'] = instance.document.url
+            try:
+                representation['document'] = instance.document.url
+            except AttributeError:
+                representation['document'] = str(instance.document)
+                
         return representation
