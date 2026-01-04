@@ -1,16 +1,14 @@
 """
 Django settings for myproject project.
-Production Ready Configuration for Railway & Vercel.
-Fix: Disable Whitenoise compression to prevent FileNotFoundError during build.
+FIX: Database PostgreSQL & Cloudinary Storage (Agar Data PERMANEN).
 """
 
 from pathlib import Path
 import os
-import dj_database_url
+import dj_database_url  # Pastikan library ini terinstall
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,10 +22,9 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-pro
 # DEBUG: Default False di production agar aman
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# ALLOWED_HOSTS handling
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
 if '*' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('*') 
+    ALLOWED_HOSTS.append('*')
 
 # ==============================================================================
 # APPLICATION DEFINITION
@@ -39,8 +36,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # Cloudinary Storage harus sebelum staticfiles
-    'cloudinary_storage',
+    # WAJIB ADA: Cloudinary Storage sebelum staticfiles (opsional) atau sesudahnya
+    'cloudinary_storage', 
     'django.contrib.staticfiles',
     'cloudinary',
     
@@ -58,7 +55,7 @@ AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Middleware tetap aktif untuk serve file
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -90,11 +87,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # ==============================================================================
-# DATABASE
+# DATABASE (PERBAIKAN UTAMA: AUTO POSTGRESQL)
 # ==============================================================================
 
 DATABASES = {
     'default': dj_database_url.config(
+        # Default ke SQLite CUMA kalau di laptop (tidak ada DATABASE_URL)
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
@@ -122,7 +120,7 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================================================
-# STATIC & MEDIA FILES (SAFE MODE)
+# STATIC & MEDIA FILES (PERBAIKAN UTAMA: CLOUDINARY)
 # ==============================================================================
 
 STATIC_URL = '/static/'
@@ -139,16 +137,16 @@ CLOUDINARY_STORAGE = {
 # Konfigurasi Penyimpanan (STORAGES)
 STORAGES = {
     "default": {
+        # File Upload masuk Cloudinary (Agar permanen)
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        # PERBAIKAN FINAL: Gunakan penyimpanan standar Django.
-        # Ini mencegah Whitenoise mencoba mengompres file saat build (penyebab error).
+        # Static file pakai standar Django (Safe Mode untuk Railway)
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Legacy setting untuk kompatibilitas library lain
+# Legacy setting (untuk kompatibilitas)
 STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 
 # ==============================================================================
@@ -165,7 +163,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 if os.getenv('FRONTEND_URL'):
-    CORS_ALLOWED_ORIGINS.append(os.getenv('FRONTEND_URL'))
+    clean_url = os.getenv('FRONTEND_URL').rstrip('/')
+    CORS_ALLOWED_ORIGINS.append(clean_url)
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS + [
     "https://" + os.getenv('RAILWAY_PUBLIC_DOMAIN', 'localhost'),
@@ -213,7 +212,7 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==============================================================================
-# SECURITY SETTINGS (Railway Specific)
+# SECURITY SETTINGS
 # ==============================================================================
 
 if not DEBUG:
