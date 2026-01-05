@@ -1,2 +1,2 @@
-web: gunicorn myproject.wsgi --log-file -
-release: python manage.py migrate --noinput && python manage.py collectstatic --noinput
+release: python manage.py collectstatic --noinput
+web: gunicorn myproject.wsgi --bind 0.0.0.0:$PORT
