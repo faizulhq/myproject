@@ -5,7 +5,7 @@ FIX: Database PostgreSQL & Cloudinary Storage (Agar Data PERMANEN).
 
 from pathlib import Path
 import os
-import dj_database_url  # Pastikan library ini terinstall
+import dj_database_url
 from datetime import timedelta
 from dotenv import load_dotenv
 
@@ -17,17 +17,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # CORE SETTINGS
 # ==============================================================================
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-in-production')
-
-# DEBUG: Default False di production agar aman
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.vercel.app').split(',')
-if '*' not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append('*')
 
 # ==============================================================================
-# APPLICATION DEFINITION
+# APPLICATIONS
 # ==============================================================================
 
 INSTALLED_APPS = [
@@ -36,19 +31,17 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    # WAJIB ADA: Cloudinary Storage sebelum staticfiles (opsional) atau sesudahnya
-    'cloudinary_storage', 
     'django.contrib.staticfiles',
-    'cloudinary',
     
-    # Third party apps
+    # Third party
+    'storages',  # GANTI dari cloudinary_storage
     'rest_framework',
     'corsheaders',
     'rest_framework_simplejwt',
     
     # Local apps
     'items',
-    'users', 
+    'users',
 ]
 
 AUTH_USER_MODEL = 'users.User'
@@ -78,7 +71,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'django.template.context_processors.media', 
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -87,12 +80,11 @@ TEMPLATES = [
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 # ==============================================================================
-# DATABASE (PERBAIKAN UTAMA: AUTO POSTGRESQL)
+# DATABASE
 # ==============================================================================
 
 DATABASES = {
     'default': dj_database_url.config(
-        # Default ke SQLite CUMA kalau di laptop (tidak ada DATABASE_URL)
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
         conn_max_age=600,
         conn_health_checks=True,
@@ -120,37 +112,42 @@ USE_I18N = True
 USE_TZ = True
 
 # ==============================================================================
-# STATIC & MEDIA FILES (PERBAIKAN UTAMA: CLOUDINARY)
+# CLOUDFLARE R2 STORAGE (PENTING!)
 # ==============================================================================
 
+# Static files (CSS, JS) - Lokal
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = '/media/'
 
-# Konfigurasi Cloudinary Credentials
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-}
+# Media files (Upload user) - R2
+MEDIA_URL = 'https://assets.senbi.online/'
 
-# Konfigurasi Penyimpanan (STORAGES)
+# R2 Configuration
+AWS_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.getenv('R2_BUCKET_NAME')
+AWS_S3_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL')
+AWS_S3_REGION_NAME = 'auto'
+
+# R2 Settings
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_CUSTOM_DOMAIN = 'assets.senbi.online'
+
+# Django Storages Configuration
 STORAGES = {
     "default": {
-        # File Upload masuk Cloudinary (Agar permanen)
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
     },
     "staticfiles": {
-        # Static file pakai standar Django (Safe Mode untuk Railway)
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
-# Legacy setting (untuk kompatibilitas)
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
-
 # ==============================================================================
-# CORS & CSRF SETTINGS
+# CORS & CSRF
 # ==============================================================================
 
 CORS_ALLOW_ALL_ORIGINS = False
@@ -159,21 +156,17 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://fe-myproject.vercel.app", 
+    "https://fe-myproject.vercel.app",
 ]
 
 if os.getenv('FRONTEND_URL'):
-    clean_url = os.getenv('FRONTEND_URL').rstrip('/')
-    CORS_ALLOWED_ORIGINS.append(clean_url)
+    CORS_ALLOWED_ORIGINS.append(os.getenv('FRONTEND_URL').rstrip('/'))
 
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS + [
-    "https://" + os.getenv('RAILWAY_PUBLIC_DOMAIN', 'localhost'),
+    "https://*.railway.app",
 ]
 
-CORS_ALLOW_METHODS = [
-    'DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT',
-]
-
+CORS_ALLOW_METHODS = ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT']
 CORS_ALLOW_HEADERS = [
     'accept', 'accept-encoding', 'authorization', 'content-type',
     'dnt', 'origin', 'user-agent', 'x-csrftoken', 'x-requested-with',
@@ -184,15 +177,9 @@ CORS_ALLOW_HEADERS = [
 # ==============================================================================
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
+    'DEFAULT_AUTHENTICATION_CLASSES': ('rest_framework_simplejwt.authentication.JWTAuthentication',),
+    'DEFAULT_RENDERER_CLASSES': ['rest_framework.renderers.JSONRenderer'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
@@ -212,15 +199,15 @@ SIMPLE_JWT = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==============================================================================
-# SECURITY SETTINGS
+# SECURITY (Production)
 # ==============================================================================
 
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False 
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 31536000 
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True

@@ -1,10 +1,29 @@
+# Environment Variables (WAJIB!)
+.env
+.env.*
+*.env
+.env.local
+.env.production
+
+# S3 Browser Config
+s3browser.json
+r2-config.json
+*.credentials
+
+# Python
 venv/
 __pycache__/
 *.pyc
 db.sqlite3
 *.log
-.env
-staticfiles/ 
+
+# Django
+staticfiles/
 media/
 avatars/
-media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
